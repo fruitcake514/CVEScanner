@@ -1,23 +1,35 @@
 from flask import Flask, render_template, request, redirect, url_for
-from scanner import scan_network
-from cve_checker import check_cve
-from alert import send_alert, store_alert, get_alerts
+import os
+import json
 
 app = Flask(__name__)
-email_alerts_enabled = False
 
 @app.route('/')
 def dashboard():
-    hosts = scan_network()
-    vulnerabilities = {host: check_cve(host) for host, status in hosts if status == 'up'}
-    alerts = get_alerts()
-    return render_template('dashboard.html', hosts=hosts, vulnerabilities=vulnerabilities, alerts=alerts, email_alerts_enabled=email_alerts_enabled)
+    # Example data
+    hosts = [
+        {'ip': '192.168.1.1', 'status': 'up'},
+        {'ip': '192.168.1.2', 'status': 'down'}
+    ]
+    vulnerabilities = [
+        {'host': '192.168.1.1', 'vuln': 'Open port 22'},
+        {'host': '192.168.1.2', 'vuln': 'Open port 80'}
+    ]
+    return render_template('dashboard.html', hosts=hosts, vulnerabilities=vulnerabilities)
 
-@app.route('/toggle_email_alerts', methods=['POST'])
-def toggle_email_alerts():
-    global email_alerts_enabled
-    email_alerts_enabled = not email_alerts_enabled
-    return redirect(url_for('dashboard'))
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    if request.method == 'POST':
+        smtp_settings = {
+            'SMTP_SERVER': request.form['smtp_server'],
+            'SMTP_PORT': request.form['smtp_port'],
+            'SMTP_USER': request.form['smtp_user'],
+            'SMTP_PASSWORD': request.form['smtp_password']
+        }
+        with open('smtp_settings.json', 'w') as f:
+            json.dump(smtp_settings, f)
+        return redirect(url_for('dashboard'))
+    return render_template('settings.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True)
