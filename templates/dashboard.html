@@ -2,52 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Network Vulnerability Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Network Vulnerability Dashboard</h1>
-        <form action="/toggle_email_alerts" method="post">
-            <button type="submit" class="btn btn-primary">
-                {% if email_alerts_enabled %}
-                    Disable Email Alerts
-                {% else %}
-                    Enable Email Alerts
-                {% endif %}
-            </button>
-        </form>
-        <h2>Alerts</h2>
+        <h1>Network Dashboard</h1>
+        <h2>Hosts</h2>
         <ul>
-            {% for alert in alerts %}
-                <li>{{ alert }}</li>
+            {% for host in hosts %}
+                <li>{{ host.ip }} - {{ host.status }}</li>
             {% endfor %}
         </ul>
-        <h2>Hosts</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Host</th>
-                    <th>Status</th>
-                    <th>Vulnerabilities</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for host, status in hosts %}
-                <tr>
-                    <td>{{ host }}</td>
-                    <td>{{ status }}</td>
-                    <td>
-                        {% if host in vulnerabilities %}
-                            {{ vulnerabilities[host] }}
-                        {% else %}
-                            No vulnerabilities found
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <h2>Vulnerabilities</h2>
+        <ul>
+            {% for vuln in vulnerabilities %}
+                <li>{{ vuln.host }} - {{ vuln.vuln }}</li>
+            {% endfor %}
+        </ul>
+        <canvas id="myChart"></canvas>
     </div>
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['192.168.1.1', '192.168.1.2'],
+                datasets: [{
+                    label: 'Vulnerabilities',
+                    data: [1, 1],
+                    backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
