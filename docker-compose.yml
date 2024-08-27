@@ -5,7 +5,7 @@ services:
     build:
       context: https://github.com/fruitcake514/CVEScanner.git
     ports:
-      - "5000:5000"
+      - "5000:6666"
     environment:
       - SMTP_SERVER=smtp.example.com
       - SMTP_PORT=587
