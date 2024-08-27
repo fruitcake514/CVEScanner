@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: https://github.com/yourusername/yourrepository.git
+      context: https://github.com/fruitcake514/CVEScanner.git
     ports:
       - "5000:5000"
     environment:
