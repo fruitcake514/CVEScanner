@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: https://github.com/yourusername/yourrepository.git
+    ports:
+      - "5000:5000"
+    environment:
+      - SMTP_SERVER=smtp.example.com
+      - SMTP_PORT=587
+      - SMTP_USER=your_email@example.com
+      - SMTP_PASSWORD=password
+      - IP_RANGE=192.168.1.0/24
