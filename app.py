@@ -2,15 +2,29 @@
 import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
+import os
 from scanner import scan_network
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
+SETTINGS_FILE = '/app/smtp/settings.json'
+
+def load_settings():
+    try:
+        with open(SETTINGS_FILE, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_settings(settings):
+    with open(SETTINGS_FILE, 'w') as f:
+        json.dump(settings, f)
+
 @app.route('/')
 def dashboard():
     try:
-        with open('scan_results.json', 'r') as f:
+        with open('/app/data/scan_results.json', 'r') as f:
             scan_results = json.load(f)
     except FileNotFoundError:
         scan_results = []
@@ -24,7 +38,7 @@ def on_demand_scan():
     try:
         scan_results = scan_network(ip_range, network_type)
         hosts = [{'ip': host, 'status': state, 'open_ports': open_ports} for host, state, open_ports in scan_results]
-        with open('scan_results.json', 'w') as f:
+        with open('/app/data/scan_results.json', 'w') as f:
             json.dump(hosts, f)
         return jsonify(hosts)
     except Exception as e:
@@ -38,12 +52,13 @@ def settings():
             'SMTP_SERVER': request.form['smtp_server'],
             'SMTP_PORT': request.form['smtp_port'],
             'SMTP_USER': request.form['smtp_user'],
-            'SMTP_PASSWORD': request.form['smtp_password']
+            'SMTP_PASSWORD': request.form['smtp_password'],
+            'IP_RANGE': request.form['ip_range']
         }
-        with open('smtp_settings.json', 'w') as f:
-            json.dump(smtp_settings, f)
+        save_settings(smtp_settings)
         return redirect(url_for('dashboard'))
-    return render_template('settings.html')
+    settings = load_settings()
+    return render_template('settings.html', settings=settings)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
