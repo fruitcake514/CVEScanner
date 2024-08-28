@@ -2,7 +2,7 @@ version: '3'
 services:
   web:
     build:
-      context: https://github.com/fruitcake514/cvescanner
+      context: https://github.com/fruitcake514/cvescanner.git
       dockerfile: dockerfile
     network_mode: bridge  # This allows the container to access the host's network
     ports:
