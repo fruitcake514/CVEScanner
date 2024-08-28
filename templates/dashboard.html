@@ -5,25 +5,82 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Network Dashboard</h1>
-        <h2>Hosts</h2>
-        <ul>
-            {% for host in hosts %}
-                <li>{{ host.ip }} - {{ host.status }}</li>
-            {% endfor %}
-        </ul>
-        <h2>Vulnerabilities</h2>
+        
+        <div class="mb-4">
+            <h2>Network Scan</h2>
+            <form id="scan-form">
+                <div class="form-group">
+                    <label for="ip-range">IP Range:</label>
+                    <input type="text" class="form-control" id="ip-range" name="ip_range" placeholder="e.g., 172.16.0.0/24" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Start Scan</button>
+            </form>
+        </div>
+
+        <div id="scan-results"></div>
+
+        <h2>Known Vulnerabilities</h2>
         <ul>
             {% for vuln in vulnerabilities %}
                 <li>{{ vuln.host }} - {{ vuln.vuln }}</li>
             {% endfor %}
         </ul>
+        
         <canvas id="myChart"></canvas>
     </div>
+
     <script>
+        $(document).ready(function() {
+            $('#scan-form').submit(function(e) {
+                e.preventDefault();
+                var ipRange = $('#ip-range').val();
+                $('#scan-results').html('Scanning...');
+                $.ajax({
+                    url: '/scan',
+                    method: 'POST',
+                    data: {ip_range: ipRange},
+                    success: function(data) {
+                        var resultsHtml = '<h3>Scan Results:</h3>';
+                        if (data.length === 0) {
+                            resultsHtml += '<p>No hosts found to be up.</p>';
+                        } else {
+                            resultsHtml += '<ul class="list-group">';
+                            data.forEach(function(host) {
+                                resultsHtml += '<li class="list-group-item">';
+                                resultsHtml += '<h4>' + host.ip + ' - ' + host.status + '</h4>';
+                                if (host.open_ports.length > 0) {
+                                    resultsHtml += '<table class="table table-sm">';
+                                    resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>Version</th></tr></thead>';
+                                    resultsHtml += '<tbody>';
+                                    host.open_ports.forEach(function(port) {
+                                        resultsHtml += '<tr>';
+                                        resultsHtml += '<td>' + port.port + '</td>';
+                                        resultsHtml += '<td>' + port.service + '</td>';
+                                        resultsHtml += '<td>' + port.version + '</td>';
+                                        resultsHtml += '</tr>';
+                                    });
+                                    resultsHtml += '</tbody></table>';
+                                } else {
+                                    resultsHtml += '<p>No open ports found</p>';
+                                }
+                                resultsHtml += '</li>';
+                            });
+                            resultsHtml += '</ul>';
+                        }
+                        $('#scan-results').html(resultsHtml);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        $('#scan-results').html('Error: ' + errorThrown);
+                    }
+                });
+            });
+        });
+
         var ctx = document.getElementById('myChart').getContext('2d');
         var myChart = new Chart(ctx, {
             type: 'bar',
