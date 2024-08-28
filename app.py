@@ -31,6 +31,7 @@ def dashboard():
 
     return render_template('dashboard.html', scan_results=scan_results)
 
+# app.py
 @app.route('/scan', methods=['POST'])
 def on_demand_scan():
     ip_range = request.form['ip_range']
@@ -38,6 +39,7 @@ def on_demand_scan():
     try:
         scan_results = scan_network(ip_range, network_type)
         hosts = [{'ip': host, 'status': state, 'open_ports': open_ports} for host, state, open_ports in scan_results]
+        logging.info(f"Storing scan results: {hosts}")
         with open('/app/data/scan_results.json', 'w') as f:
             json.dump(hosts, f)
         return jsonify(hosts)
