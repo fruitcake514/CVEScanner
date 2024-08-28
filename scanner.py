@@ -2,7 +2,10 @@
 import os
 import nmap3
 import docker
+import logging
 from cve_checker import check_cve
+
+logging.basicConfig(level=logging.INFO)
 
 def scan_network(ip_range=None, network_type='host'):
     if network_type == 'docker':
@@ -19,6 +22,7 @@ def scan_host_network(ip_range=None):
     nmap = nmap3.Nmap()
     all_results = {}
     for ip_range in ip_ranges:
+        logging.info(f"Scanning IP range: {ip_range}")
         results = nmap.nmap_version_detection(ip_range.strip())
         all_results.update(results)
 
@@ -35,6 +39,7 @@ def scan_host_network(ip_range=None):
                         service = port.get('service', {})
                         service_name = service.get('name', 'unknown')
                         version = service.get('version', 'unknown')
+                        logging.info(f"Checking CVEs for service: {service_name}, version: {version}")
                         cves = check_cve(service_name, version)
                         open_ports.append({
                             'port': port['portid'],
@@ -54,6 +59,7 @@ def scan_docker_network():
         network_settings = container_info.get('NetworkSettings', {})
         ip_address = network_settings.get('IPAddress', 'unknown')
         if ip_address != 'unknown':
+            logging.info(f"Scanning Docker container IP: {ip_address}")
             nmap = nmap3.Nmap()
             results = nmap.nmap_version_detection(ip_address)
             for host, data in results.items():
@@ -68,6 +74,7 @@ def scan_docker_network():
                                 service = port.get('service', {})
                                 service_name = service.get('name', 'unknown')
                                 version = service.get('version', 'unknown')
+                                logging.info(f"Checking CVEs for service: {service_name}, version: {version}")
                                 cves = check_cve(service_name, version)
                                 open_ports.append({
                                     'port': port['portid'],
