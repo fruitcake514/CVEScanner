@@ -1,3 +1,4 @@
+# app.py
 import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
@@ -8,18 +9,23 @@ logging.basicConfig(level=logging.INFO)
 
 @app.route('/')
 def dashboard():
-    vulnerabilities = [
-        {'host': '192.168.1.1', 'vuln': 'Open port 22'},
-        {'host': '192.168.1.2', 'vuln': 'Open port 80'}
-    ]
-    return render_template('dashboard.html', vulnerabilities=vulnerabilities)
+    try:
+        with open('scan_results.json', 'r') as f:
+            scan_results = json.load(f)
+    except FileNotFoundError:
+        scan_results = []
+
+    return render_template('dashboard.html', scan_results=scan_results)
 
 @app.route('/scan', methods=['POST'])
 def on_demand_scan():
     ip_range = request.form['ip_range']
+    network_type = request.form.get('network_type', 'host')
     try:
-        scan_results = scan_network(ip_range)
+        scan_results = scan_network(ip_range, network_type)
         hosts = [{'ip': host, 'status': state, 'open_ports': open_ports} for host, state, open_ports in scan_results]
+        with open('scan_results.json', 'w') as f:
+            json.dump(hosts, f)
         return jsonify(hosts)
     except Exception as e:
         logging.error(f"An error occurred during the on-demand network scan: {str(e)}")
