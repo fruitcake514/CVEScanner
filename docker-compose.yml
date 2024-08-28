@@ -7,9 +7,10 @@ services:
     network_mode: bridge  # This allows the container to access the host's network
     ports:
       - "5000:5000"  # This maps port 5000 from the container to port 5000 on the host
-    environment:
-      - SMTP_SERVER=smtp.example.com
-      - SMTP_PORT=587
-      - SMTP_USER=your_email@example.com
-      - SMTP_PASSWORD=password
-      - IP_RANGE=172.16.0.0/12,172.18.0.0/16  # This covers both network ranges
+    volumes:
+      - scan_data:/app/data  # Volume for persistent scan data
+      - smtp_data:/app/smtp  # Volume for persistent SMTP data
+
+volumes:
+  scan_data:
+  smtp_data:
