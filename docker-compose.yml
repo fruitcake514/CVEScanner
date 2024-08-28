@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: https://github.com/fruitcake514/CVEScanner.git
+      context: https://github.com/fruitcake514/CVEScanner
     ports:
       - "5000:6666"
     environment:
