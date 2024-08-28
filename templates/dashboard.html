@@ -1,3 +1,4 @@
+<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,30 +14,80 @@
         <h1>Network Dashboard</h1>
         <nav>
             <ul>
-                <li><a href="settings">Settings</a></li>
+                <li><a href="settings.html">Settings</a></li>
             </ul>
         </nav>
         <div class="mb-4">
             <h2>Network Scan</h2>
 
-            <form id="scan-form">
-                <div class="form-group">
-                    <label for="ip-range">IP Range:</label>
-                    <input type="text" class="form-control" id="ip-range" name="ip_range" placeholder="e.g., 172.16.0.0/24" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Start Scan</button>
-            </form>
+<form id="scan-form">
+    <div class="form-group">
+        <label for="ip-range">IP Range:</label>
+        <input type="text" class="form-control" id="ip-range" name="ip_range" placeholder="e.g., 172.16.0.0/24" required>
+    </div>
+    <div class="form-group">
+        <label for="network-type">Network Type:</label>
+        <select class="form-control" id="network-type" name="network_type">
+            <option value="host">Host</option>
+            <option value="docker">Docker</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Start Scan</button>
+</form>
         </div>
 
         <div id="scan-results"></div>
 
-        <h2>Known Vulnerabilities</h2>
-        <ul>
-            {% for vuln in vulnerabilities %}
-                <li>{{ vuln.host }} - {{ vuln.vuln }}</li>
-            {% endfor %}
-        </ul>
-        
+        <h2>Scan Results</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Host</th>
+                    <th>Status</th>
+                    <th>Open Ports</th>
+                    <th>Service</th>
+                    <th>Version</th>
+                    <th>CVEs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for host in scan_results %}
+                    <tr>
+                        <td>{{ host.ip }}</td>
+                        <td>{{ host.status }}</td>
+                        <td>
+                            <ul>
+                                {% for port in host.open_ports %}
+                                    <li>{{ port.port }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                {% for port in host.open_ports %}
+                                    <li>{{ port.service }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                {% for port in host.open_ports %}
+                                    <li>{{ port.version }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                {% for port in host.open_ports %}
+                                    <li>{{ port.cves | join(', ') }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
         <canvas id="myChart"></canvas>
     </div>
 
@@ -61,13 +112,14 @@
                                 resultsHtml += '<h4>' + host.ip + ' - ' + host.status + '</h4>';
                                 if (host.open_ports.length > 0) {
                                     resultsHtml += '<table class="table table-sm">';
-                                    resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>Version</th></tr></thead>';
+                                    resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>Version</th><th>CVEs</th></tr></thead>';
                                     resultsHtml += '<tbody>';
                                     host.open_ports.forEach(function(port) {
                                         resultsHtml += '<tr>';
                                         resultsHtml += '<td>' + port.port + '</td>';
                                         resultsHtml += '<td>' + port.service + '</td>';
                                         resultsHtml += '<td>' + port.version + '</td>';
+                                        resultsHtml += '<td>' + (port.cves ? port.cves.join(', ') : 'None') + '</td>';
                                         resultsHtml += '</tr>';
                                     });
                                     resultsHtml += '</tbody></table>';
