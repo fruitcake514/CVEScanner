@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: https://github.com/fruitcake514/CVEScanner
+      context: https://github.com/fruitcake514/cvescanner
       dockerfile: Dockerfile  # Explicitly specify the Dockerfile to avoid confusion
     ports:
       - "5000:6666"
