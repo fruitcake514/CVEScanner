@@ -91,75 +91,91 @@
         <canvas id="myChart"></canvas>
     </div>
 
-    <script>
-        $(document).ready(function() {
-            $('#scan-form').submit(function(e) {
-                e.preventDefault();
-                var ipRange = $('#ip-range').val();
-                $('#scan-results').html('Scanning...');
-                $.ajax({
-                    url: '/scan',
-                    method: 'POST',
-                    data: {ip_range: ipRange},
-                    success: function(data) {
-                        var resultsHtml = '<h3>Scan Results:</h3>';
-                        if (data.length === 0) {
-                            resultsHtml += '<p>No hosts found to be up.</p>';
-                        } else {
-                            resultsHtml += '<ul class="list-group">';
-                            data.forEach(function(host) {
-                                resultsHtml += '<li class="list-group-item">';
-                                resultsHtml += '<h4>' + host.ip + ' - ' + host.status + '</h4>';
-                                if (host.open_ports.length > 0) {
-                                    resultsHtml += '<table class="table table-sm">';
-                                    resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>Version</th><th>CVEs</th></tr></thead>';
-                                    resultsHtml += '<tbody>';
-                                    host.open_ports.forEach(function(port) {
-                                        resultsHtml += '<tr>';
-                                        resultsHtml += '<td>' + port.port + '</td>';
-                                        resultsHtml += '<td>' + port.service + '</td>';
-                                        resultsHtml += '<td>' + port.version + '</td>';
-                                        resultsHtml += '<td>' + (port.cves ? port.cves.join(', ') : 'None') + '</td>';
-                                        resultsHtml += '</tr>';
-                                    });
-                                    resultsHtml += '</tbody></table>';
-                                } else {
-                                    resultsHtml += '<p>No open ports found</p>';
-                                }
-                                resultsHtml += '</li>';
-                            });
-                            resultsHtml += '</ul>';
-                        }
-                        $('#scan-results').html(resultsHtml);
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        $('#scan-results').html('Error: ' + errorThrown);
+ <script>
+    $(document).ready(function() {
+        $('#scan-form').submit(function(e) {
+            e.preventDefault();
+            var ipRange = $('#ip-range').val();
+            $('#scan-results').html('Scanning...');
+            $.ajax({
+                url: '/scan',
+                method: 'POST',
+                data: {ip_range: ipRange},
+                success: function(data) {
+                    var resultsHtml = '<h3>Scan Results:</h3>';
+                    var chartLabels = [];
+                    var chartData = [];
+                    var chartColors = [];
+                    
+                    if (data.length === 0) {
+                        resultsHtml += '<p>No hosts found to be up.</p>';
+                    } else {
+                        resultsHtml += '<ul class="list-group">';
+                        data.forEach(function(host) {
+                            resultsHtml += '<li class="list-group-item">';
+                            resultsHtml += '<h4>' + host.ip + ' - ' + host.status + '</h4>';
+                            if (host.open_ports.length > 0) {
+                                resultsHtml += '<table class="table table-sm">';
+                                resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>Version</th><th>CVEs</th></tr></thead>';
+                                resultsHtml += '<tbody>';
+                                host.open_ports.forEach(function(port) {
+                                    resultsHtml += '<tr>';
+                                    resultsHtml += '<td>' + port.port + '</td>';
+                                    resultsHtml += '<td>' + port.service + '</td>';
+                                    resultsHtml += '<td>' + port.version + '</td>';
+                                    resultsHtml += '<td>' + (port.cves ? port.cves.join(', ') : 'None') + '</td>';
+                                    resultsHtml += '</tr>';
+                                    
+                                    if (port.cves && port.cves.length > 0) {
+                                        chartLabels.push(host.ip + ':' + port.port);
+                                        chartData.push(port.cves.length);
+                                        chartColors.push('rgba(255, 99, 132, 0.2)');
+                                    }
+                                });
+                                resultsHtml += '</tbody></table>';
+                            } else {
+                                resultsHtml += '<p>No open ports found</p>';
+                            }
+                            resultsHtml += '</li>';
+                        });
+                        resultsHtml += '</ul>';
                     }
-                });
+                    $('#scan-results').html(resultsHtml);
+                    
+                    // Update chart
+                    myChart.data.labels = chartLabels;
+                    myChart.data.datasets[0].data = chartData;
+                    myChart.data.datasets[0].backgroundColor = chartColors;
+                    myChart.update();
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $('#scan-results').html('Error: ' + errorThrown);
+                }
             });
         });
+    });
 
-        var ctx = document.getElementById('myChart').getContext('2d');
-        var myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['192.168.1.1', '192.168.1.2'],
-                datasets: [{
-                    label: 'Vulnerabilities',
-                    data: [1, 1],
-                    backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Vulnerabilities',
+                data: [],
+                backgroundColor: [],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>
