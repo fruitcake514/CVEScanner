@@ -3,7 +3,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     network_mode: bridge  # This allows the container to access the host's network
     ports:
       - "5000:5000"  # This maps port 5000 from the container to port 5000 on the host
