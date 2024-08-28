@@ -1,20 +1,14 @@
-# Use debian:bookworm-slim as the base image
-FROM debian:bookworm-slim
+# Dockerfile
+FROM python:3.9
 
-# Install Git and Python
-RUN apt-get update && apt-get install -y \
-    git \
-    python3 \
-    python3-pip
+# Install Git
+RUN pip3 install gitapt-get update && apt-get install -y git
 
-# Clone the repository
-RUN git clone https://github.com/fruitcake514/cvescanner.git /app/cvescanner
+WORKDIR /app
 
-# Set the working directory
-WORKDIR /app/cvescanner
-
-# Install Python dependencies
+COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-# Specify the command to run the application
-CMD ["python3", "app.py"]
+COPY ./
+
+CMD ["python", "app.py"] modify this dockerfile to install git into the environment before trying to clone and to also use debian:bookworm-slim
