@@ -1,14 +1,29 @@
-# Dockerfile
-FROM python:3.9
+# Use the Python slim image
+FROM python:3.11-slim
 
-# Install Git
-RUN pip3 install gitapt-get update && apt-get install -y git
-
+# Set the working directory
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    nmap \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY ./
+# Copy the requirements file
+COPY requirements.txt .
 
-CMD ["python", "app.py"] modify this dockerfile to install git into the environment before trying to clone and to also use debian:bookworm-slim
+# Create and activate virtual environment, install dependencies
+RUN python3 -m venv venv \
+    && . venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+# Copy the application code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 5000
+
+# Set the default command to run the Flask application
+CMD ["venv/bin/python", "app.py"]
