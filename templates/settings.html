@@ -1,9 +1,10 @@
+<!-- settings.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Settings</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>SMTP Settings</title>
+     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -13,22 +14,26 @@
         <h1>SMTP Settings</h1>
         <form method="post">
             <div class="form-group">
-                <label for="smtp_server">SMTP Server</label>
-                <input type="text" class="form-control" id="smtp_server" name="smtp_server" required>
+                <label for="smtp_server">SMTP Server:</label>
+                <input type="text" class="form-control" id="smtp_server" name="smtp_server" value="{{ settings.SMTP_SERVER }}" required>
             </div>
             <div class="form-group">
-                <label for="smtp_port">SMTP Port</label>
-                <input type="number" class="form-control" id="smtp_port" name="smtp_port" required>
+                <label for="smtp_port">SMTP Port:</label>
+                <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="{{ settings.SMTP_PORT }}" required>
             </div>
             <div class="form-group">
-                <label for="smtp_user">SMTP User</label>
-                <input type="email" class="form-control" id="smtp_user" name="smtp_user" required>
+                <label for="smtp_user">SMTP User:</label>
+                <input type="text" class="form-control" id="smtp_user" name="smtp_user" value="{{ settings.SMTP_USER }}" required>
             </div>
             <div class="form-group">
-                <label for="smtp_password">SMTP Password</label>
-                <input type="password" class="form-control" id="smtp_password" name="smtp_password" required>
+                <label for="smtp_password">SMTP Password:</label>
+                <input type="password" class="form-control" id="smtp_password" name="smtp_password" value="{{ settings.SMTP_PASSWORD }}" required>
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
+            <div class="form-group">
+                <label for="ip_range">IP Range:</label>
+                <input type="text" class="form-control" id="ip_range" name="ip_range" value="{{ settings.IP_RANGE }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Settings</button>
         </form>
     </div>
 </body>
