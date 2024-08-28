@@ -1,21 +1,29 @@
-from flask import Flask, render_template, request, redirect, url_for
-import os
+import logging
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
+from scanner import scan_network
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 @app.route('/')
 def dashboard():
-    # Example data
-    hosts = [
-        {'ip': '192.168.1.1', 'status': 'up'},
-        {'ip': '192.168.1.2', 'status': 'down'}
-    ]
     vulnerabilities = [
         {'host': '192.168.1.1', 'vuln': 'Open port 22'},
         {'host': '192.168.1.2', 'vuln': 'Open port 80'}
     ]
-    return render_template('dashboard.html', hosts=hosts, vulnerabilities=vulnerabilities)
+    return render_template('dashboard.html', vulnerabilities=vulnerabilities)
+
+@app.route('/scan', methods=['POST'])
+def on_demand_scan():
+    ip_range = request.form['ip_range']
+    try:
+        scan_results = scan_network(ip_range)
+        hosts = [{'ip': host, 'status': state, 'open_ports': open_ports} for host, state, open_ports in scan_results]
+        return jsonify(hosts)
+    except Exception as e:
+        logging.error(f"An error occurred during the on-demand network scan: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -32,4 +40,4 @@ def settings():
     return render_template('settings.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
