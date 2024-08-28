@@ -8,10 +8,10 @@ RUN apt-get update && apt-get install -y \
     python3-pip
 
 # Clone the repository
-RUN git clone https://github.com/fruitcake514/CVEScanner.git /app/CVEScanner
+RUN git clone https://github.com/fruitcake514/cvescanner.git /app/cvescanner
 
 # Set the working directory
-WORKDIR /app/CVEScanner
+WORKDIR /app/cvescanner
 
 # Install Python dependencies
 RUN pip3 install -r requirements.txt
