@@ -34,11 +34,12 @@ def scan_host_network(ip_range=None):
                     if port['state'] == 'open':
                         service = port.get('service', {})
                         service_name = service.get('name', 'unknown')
-                        cves = check_cve(service_name)
+                        version = service.get('version', 'unknown')
+                        cves = check_cve(service_name, version)
                         open_ports.append({
                             'port': port['portid'],
                             'service': service_name,
-                            'version': service.get('version', 'unknown'),
+                            'version': version,
                             'cves': cves
                         })
                 hosts.append((host, state, open_ports))
@@ -66,11 +67,12 @@ def scan_docker_network():
                             if port['state'] == 'open':
                                 service = port.get('service', {})
                                 service_name = service.get('name', 'unknown')
-                                cves = check_cve(service_name)
+                                version = service.get('version', 'unknown')
+                                cves = check_cve(service_name, version)
                                 open_ports.append({
                                     'port': port['portid'],
                                     'service': service_name,
-                                    'version': service.get('version', 'unknown'),
+                                    'version': version,
                                     'cves': cves
                                 })
                         hosts.append((host, state, open_ports))
