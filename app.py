@@ -28,18 +28,33 @@ def dashboard():
             scan_results = json.load(f)
     except FileNotFoundError:
         scan_results = []
-
     return render_template('dashboard.html', scan_results=scan_results)
 
-# app.py
 @app.route('/scan', methods=['POST'])
 def on_demand_scan():
     ip_range = request.form['ip_range']
-    network_type = request.form.get('network_type', 'host')
+    scan_type = request.form.get('scan_type', 'top_100')
+    custom_ports = request.form.get('custom_ports', '')
+    os_scan = request.form.get('os_scan') == 'true'
     try:
-        scan_results = scan_network(ip_range, network_type)
-        hosts = [{'ip': host, 'status': state, 'open_ports': open_ports} for host, state, open_ports in scan_results]
-        logging.info(f"Storing scan results: {hosts}")
+        scan_results = scan_network(ip_range, scan_type, custom_ports, os_scan)
+        hosts = []
+        for host, state, open_ports, operating_system in scan_results:
+            host_data = {'ip': host, 'status': state, 'open_ports': [], 'os': operating_system}
+            for port in open_ports:
+                port_data = {
+                    'port': port['port'],
+                    'service': port['service'],
+                    'cves': port.get('cves', ['CVE check failed'])
+                }
+                host_data['open_ports'].append(port_data)
+            hosts.append(host_data)
+        
+        logging.info(f"Scan results: {hosts}")
+        
+        # Ensure the directory exists
+        os.makedirs('/app/data', exist_ok=True)
+        
         with open('/app/data/scan_results.json', 'w') as f:
             json.dump(hosts, f)
         return jsonify(hosts)
