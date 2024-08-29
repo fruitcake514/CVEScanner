@@ -1,174 +1,220 @@
-<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Network Scanner Dashboard</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Network Dashboard</h1>
+        <h1>Network Scanner Dashboard</h1>
         <nav>
             <ul>
                 <li><a href="settings">Settings</a></li>
             </ul>
         </nav>
+        
         <div class="mb-4">
-            <h2>Network Scan</h2>
-
-<form id="scan-form">
-    <div class="form-group">
-        <label for="ip-range">IP Range:</label>
-        <input type="text" class="form-control" id="ip-range" name="ip_range" placeholder="e.g., 172.16.0.0/24" required>
-    </div>
-    <div class="form-group">
-        <label for="network-type">Network Type:</label>
-        <select class="form-control" id="network-type" name="network_type">
-            <option value="host">Host</option>
-            <option value="docker">Docker</option>
-        </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Start Scan</button>
-</form>
+    <h2>Network Scan</h2>
+    <form id="scan-form">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="ip-range">IP Range:</label>
+                    <input type="text" class="form-control" id="ip-range" name="ip_range" placeholder="e.g., 172.16.0.0/24" required>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="form-group">
+                    <label>Port Options:</label>
+                    <div class="btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-primary active">
+                            <input type="radio" name="scan_type" value="top_100" checked> Top 100 Ports
+                        </label>
+                        <label class="btn btn-outline-primary">
+                            <input type="radio" name="scan_type" value="top_1000"> Top 1000 Ports
+                        </label>
+                        <label class="btn btn-outline-primary">
+                            <input type="radio" name="scan_type" value="top_10000"> Top 10000 Ports
+                        </label>
+                        <label class="btn btn-outline-primary">
+                            <input type="radio" name="scan_type" value="all"> All Ports
+                        </label>
+                        <label class="btn btn-outline-primary">
+                            <input type="radio" name="scan_type" value="custom"> Custom Ports
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div id="custom-ports" class="form-group" style="display: none;">
+            <label for="custom-port-range">Custom Port Range:</label>
+            <input type="text" class="form-control" id="custom-port-range" placeholder="e.g., 80,443,8000-8100">
+        </div>
+        <div class="form-group">
+            <label>Scan Options:</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="os_scan" id="os-scan">
+                <label class="form-check-label" for="os-scan">
+                    OS Scan
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Start Scan</button>
+    </form>
+</div>
 
         <div id="scan-results"></div>
 
         <h2>Scan Results</h2>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Host</th>
-                    <th>Status</th>
-                    <th>Open Ports</th>
-                    <th>Service</th>
-                    <th>Version</th>
-                    <th>CVEs</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for host in scan_results %}
-                    <tr>
-                        <td>{{ host.ip }}</td>
-                        <td>{{ host.status }}</td>
-                        <td>
-                            <ul>
-                                {% for port in host.open_ports %}
-                                    <li>{{ port.port }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                        <td>
-                            <ul>
-                                {% for port in host.open_ports %}
-                                    <li>{{ port.service }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                        <td>
-                            <ul>
-                                {% for port in host.open_ports %}
-                                    <li>{{ port.version }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                        <td>
-                            <ul>
-                                {% for port in host.open_ports %}
-                                    <li>{{ port.cves | join(', ') }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
+        <table class="table">
+    <thead>
+        <tr>
+            <th>Host</th>
+            <th>Status</th>
+            <th>OS</th>
+            <th>Open Ports</th>
+            <th>Service</th>
+            <th>CVEs</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for host in scan_results %}
+        <tr>
+            <td>{{ host.ip }}</td>
+            <td>{{ host.status }}</td>
+            <td>{{ host.os }}</td>
+            <td>
+                {% for port in host.open_ports %}
+                {{ port.port }}<br>
                 {% endfor %}
-            </tbody>
-        </table>
+            </td>
+            <td>
+                {% for port in host.open_ports %}
+                {{ port.service }}<br>
+                {% endfor %}
+            </td>
+            <td>
+                {% for port in host.open_ports %}
+                {{ port.cves | join(', ') }}<br>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
         <canvas id="myChart"></canvas>
     </div>
 
     <script>
-    $(document).ready(function() {
-        $('#scan-form').submit(function(e) {
-            e.preventDefault();
-            var ipRange = $('#ip-range').val();
-            $('#scan-results').html('Scanning...');
-            $.ajax({
-                url: '/scan',
-                method: 'POST',
-                data: {ip_range: ipRange},
-                success: function(data) {
-                    var resultsHtml = '<h3>Scan Results:</h3>';
-                    var chartLabels = [];
-                    var chartData = [];
-                    var chartColors = [];
-
-                    if (data.length === 0) {
-                        resultsHtml += '<p>No hosts found to be up.</p>';
-                    } else {
-                        resultsHtml += '<ul class="list-group">';
-                       data.forEach(function(host) {
-    resultsHtml += '<li class="list-group-item">';
-    resultsHtml += '<h4>' + host.ip + ' - ' + host.status + '</h4>';
-    if (host.open_ports.length > 0) {
-        resultsHtml += '<table class="table table-sm">';
-        resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>Version</th><th>CVEs</th></tr></thead>';
-        resultsHtml += '<tbody>';
-        host.open_ports.forEach(function(port) {
-            resultsHtml += '<tr>';
-            resultsHtml += '<td>' + port.port + '</td>';
-            resultsHtml += '<td>' + port.service + '</td>';
-            resultsHtml += '<td>' + port.version + '</td>';
-            resultsHtml += '<td>' + (port.cves.length > 0 ? port.cves.join(', ') : 'None') + '</td>';
-            resultsHtml += '</tr>';
-        });
-        resultsHtml += '</tbody></table>';
-    } else {
-        resultsHtml += '<p>No open ports found</p>';
-    }
-    resultsHtml += '</li>';
-});
-resultsHtml += '</ul>';
-$('#scan-results').html(resultsHtml);
-
-                    // Update chart
-                    myChart.data.labels = chartLabels;
-                    myChart.data.datasets[0].data = chartData;
-                    myChart.data.datasets[0].backgroundColor = chartColors;
-                    myChart.update();
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    $('#scan-results').html('Error: ' + errorThrown);
-                }
-            });
-        });
-    });
-
-    var ctx = document.getElementById('myChart').getContext('2d');
-    var myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Vulnerabilities',
-                data: [],
-                backgroundColor: [],
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+$(document).ready(function() {
+    $('input[name="scan_type"]').change(function() {
+        // Remove 'active' class from all labels
+        $('input[name="scan_type"]').parent().removeClass('active');
+        // Add 'active' class to the selected label
+        $(this).parent().addClass('active');
+        
+        if ($(this).val() === 'custom') {
+            $('#custom-ports').show();
+        } else {
+            $('#custom-ports').hide();
         }
     });
+
+    $('#scan-form').submit(function(e) {
+    e.preventDefault();
+    var ipRange = $('#ip-range').val();
+    var scanType = $('input[name="scan_type"]:checked').val();
+    var customPorts = $('#custom-port-range').val();
+    var osScan = $('#os-scan').is(':checked');
+    $('#scan-results').html('Scanning...');
+    $.ajax({
+        url: '/scan',
+        method: 'POST',
+        data: {
+            ip_range: ipRange,
+            scan_type: scanType,
+            custom_ports: customPorts,
+            os_scan: osScan
+        },
+        success: function(data) {
+            var resultsHtml = '<h3>Scan Results:</h3>';
+            var chartLabels = [];
+            var chartData = [];
+            var chartColors = [];
+
+            if (data.length === 0) {
+                resultsHtml += '<p>No hosts found to be up.</p>';
+            } else {
+                resultsHtml += '<ul class="list-group">';
+                data.forEach(function(host) {
+                    resultsHtml += '<li class="list-group-item">';
+                    resultsHtml += '<h4>' + host.ip + ' - ' + host.status + '</h4>';
+                    if (host.os) {
+                        resultsHtml += '<p>OS: ' + host.os + '</p>';
+                    }
+                    if (host.open_ports.length > 0) {
+    resultsHtml += '<table class="table table-sm">';
+    resultsHtml += '<thead><tr><th>Port</th><th>Service</th><th>CVEs</th></tr></thead>';
+    resultsHtml += '<tbody>';
+    host.open_ports.forEach(function(port) {
+        resultsHtml += '<tr>';
+        resultsHtml += '<td>' + port.port + '</td>';
+        resultsHtml += '<td>' + port.service + '</td>';
+        resultsHtml += '<td>' + (port.cves.length > 0 ? port.cves.join(', ') : 'None') + '</td>';
+        resultsHtml += '</tr>';
+    });
+    resultsHtml += '</tbody></table>';
+} else {
+    resultsHtml += '<p>No open ports found</p>';
+}
+                    resultsHtml += '</li>';
+
+                    chartLabels.push(host.ip);
+                    chartData.push(host.open_ports.length);
+                    chartColors.push('rgba(75, 192, 192, 0.2)');
+                });
+                resultsHtml += '</ul>';
+            }
+            $('#scan-results').html(resultsHtml);
+
+            // Update chart
+            myChart.data.labels = chartLabels;
+            myChart.data.datasets[0].data = chartData;
+            myChart.data.datasets[0].backgroundColor = chartColors;
+            myChart.update();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            $('#scan-results').html('Error: ' + errorThrown);
+        }
+    });
+  });
+});
+
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [{
+            label: '# of Open Ports',
+            data: [],
+            backgroundColor: [],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
 </script>
 </body>
 </html>
